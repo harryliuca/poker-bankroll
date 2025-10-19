@@ -140,6 +140,15 @@ All tables include Row Level Security (RLS) policies to ensure users can only ac
 
 The app will be available at your Netlify URL.
 
+### Netlify Environment Variables
+
+When deploying to Netlify, set these build-time environment variables so the Expo web export can connect to Supabase:
+
+- `EXPO_PUBLIC_SUPABASE_URL`
+- `EXPO_PUBLIC_SUPABASE_ANON_KEY`
+
+Define them under **Site configuration → Environment variables**, then trigger a new deploy (or push a new commit) to rebuild with the updated values.
+
 ## Development
 
 ### Running Tests
