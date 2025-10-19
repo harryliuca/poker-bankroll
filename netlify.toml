@@ -1,0 +1,17 @@
+[build]
+  command = "npx expo export -p web"
+  publish = "dist"
+
+[functions]
+  directory = "netlify/functions"
+
+[dev]
+  command = "npx expo start --web"
+  targetPort = 8082
+  port = 8888
+
+# Redirects for SPA routing in production
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

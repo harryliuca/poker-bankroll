@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "Poker Bankroll",
+    "slug": "poker-bankroll",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pokerbankroll.app"
+    },
+    "android": {
+      "package": "com.pokerbankroll.app"
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
