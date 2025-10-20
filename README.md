@@ -149,6 +149,11 @@ When deploying to Netlify, set these build-time environment variables so the Exp
 
 Define them under **Site configuration → Environment variables**, then trigger a new deploy (or push a new commit) to rebuild with the updated values.
 
+### Progressive Web App Tips
+
+- Netlify serves the app as a PWA. If you install it on Android/iOS and see stale data, clear the app storage (long-press icon → App info → Storage & cache → Clear storage) so it picks up the latest bundle.
+- The in-app refresh button (top-right) forces a stats/session refetch if Supabase takes too long during startup.
+
 ## Development
 
 ### Running Tests

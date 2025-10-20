@@ -3,13 +3,14 @@ import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, Card, Button, Appbar, FAB } from 'react-native-paper';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigation } from '@/contexts/NavigationContext';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { sessionService } from '@/services/sessions';
 import { statsService } from '@/services/stats';
 
 export default function DashboardScreen() {
   const { user, profile, signOut } = useAuth();
   const { navigateTo } = useNavigation();
+  const queryClient = useQueryClient();
 
   // Fetch active session
   const { data: activeSessions = [] } = useQuery({
@@ -51,6 +52,14 @@ export default function DashboardScreen() {
     <View style={styles.container}>
       <Appbar.Header>
         <Appbar.Content title="Poker Bankroll" />
+        <Appbar.Action
+          icon="refresh"
+          onPress={() => {
+            queryClient.invalidateQueries({ queryKey: ['sessions'] });
+            queryClient.invalidateQueries({ queryKey: ['stats'] });
+            queryClient.invalidateQueries({ queryKey: ['profile'] });
+          }}
+        />
         <Appbar.Action icon="cog" onPress={() => navigateTo('settings')} />
         <Appbar.Action icon="logout" onPress={signOut} />
       </Appbar.Header>
