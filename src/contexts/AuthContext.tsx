@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { authService } from '@/services/auth';
 import { profileService } from '@/services/profiles';
 import type { Profile } from '@/types/database';
@@ -22,6 +23,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   const loadProfile = async (userId: string) => {
     try {
@@ -39,6 +41,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    const invalidateUserData = () => {
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return key === 'sessions' || key === 'stats' || key === 'profile';
+        },
+      });
+    };
+
     // Check for existing session
     let cancelled = false;
     const failSafeTimeout = setTimeout(() => {
@@ -57,6 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (currentSession?.user) {
           setUser(currentSession.user);
           loadProfile(currentSession.user.id);
+          invalidateUserData();
         }
       })
       .catch((error) => {
@@ -80,6 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (currentSession?.user) {
           await loadProfile(currentSession.user.id);
+          invalidateUserData();
         } else {
           setProfile(null);
         }
@@ -102,6 +115,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(newUser);
     if (newUser) {
       await loadProfile(newUser.id);
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return key === 'sessions' || key === 'stats' || key === 'profile';
+        },
+      });
     }
   };
 
@@ -112,6 +131,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(newUser);
     if (newUser) {
       await loadProfile(newUser.id);
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return key === 'sessions' || key === 'stats' || key === 'profile';
+        },
+      });
     }
   };
 
@@ -120,6 +145,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     setProfile(null);
     setSession(null);
+    queryClient.invalidateQueries({
+      predicate: (query) => {
+        const key = query.queryKey[0];
+        return key === 'sessions' || key === 'stats' || key === 'profile';
+      },
+    });
   };
 
   return (
