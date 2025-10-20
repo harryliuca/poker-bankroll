@@ -52,6 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .getSession()
       .then((currentSession) => {
         if (cancelled) return;
+        console.log('AuthContext: initial session', currentSession?.user?.id ?? null);
         setSession(currentSession);
         if (currentSession?.user) {
           setUser(currentSession.user);
@@ -73,6 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Listen for auth changes
     const { data: authListener } = authService.onAuthStateChange(
       async (event, currentSession) => {
+        console.log('AuthContext: auth state change', event, currentSession?.user?.id ?? null);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
 
@@ -95,6 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     const { session: newSession, user: newUser } = await authService.signIn(email, password);
+    console.log('AuthContext: signIn result', newUser?.id ?? null);
     setSession(newSession);
     setUser(newUser);
     if (newUser) {
@@ -104,6 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string) => {
     const { session: newSession, user: newUser } = await authService.signUp(email, password);
+    console.log('AuthContext: signUp result', newUser?.id ?? null);
     setSession(newSession);
     setUser(newUser);
     if (newUser) {
