@@ -4,19 +4,37 @@
     "slug": "poker-bankroll",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "assetBundlePatterns": [
       "**/*"
     ],
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#2e7d32"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.pokerbankroll.app"
     },
     "android": {
-      "package": "com.pokerbankroll.app"
+      "package": "com.pokerbankroll.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon-foreground.png",
+        "backgroundColor": "#2e7d32"
+      }
     },
     "web": {
-      "bundler": "metro"
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png",
+      "name": "Poker Bankroll",
+      "shortName": "Bankroll",
+      "themeColor": "#2e7d32",
+      "backgroundColor": "#ffffff",
+      "display": "standalone",
+      "startUrl": ".",
+      "scope": "."
     }
   }
 }
