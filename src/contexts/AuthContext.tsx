@@ -40,9 +40,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     // Check for existing session
+    let cancelled = false;
+    const failSafeTimeout = setTimeout(() => {
+      if (!cancelled) {
+        console.warn('Auth session request timed out, showing login screen');
+        setLoading(false);
+      }
+    }, 5000);
+
     authService
       .getSession()
       .then((currentSession) => {
+        if (cancelled) return;
         setSession(currentSession);
         if (currentSession?.user) {
           setUser(currentSession.user);
@@ -50,10 +59,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       })
       .catch((error) => {
-        console.error('Error getting auth session:', error);
+        if (!cancelled) {
+          console.error('Error getting auth session:', error);
+        }
       })
       .finally(() => {
-        setLoading(false);
+        if (!cancelled) {
+          clearTimeout(failSafeTimeout);
+          setLoading(false);
+        }
       });
 
     // Listen for auth changes
@@ -73,6 +87,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     return () => {
+      cancelled = true;
+      clearTimeout(failSafeTimeout);
       authListener.subscription.unsubscribe();
     };
   }, []);
