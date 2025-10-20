@@ -40,14 +40,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     // Check for existing session
-    authService.getSession().then((currentSession) => {
-      setSession(currentSession);
-      if (currentSession?.user) {
-        setUser(currentSession.user);
-        loadProfile(currentSession.user.id);
-      }
-      setLoading(false);
-    });
+    authService
+      .getSession()
+      .then((currentSession) => {
+        setSession(currentSession);
+        if (currentSession?.user) {
+          setUser(currentSession.user);
+          loadProfile(currentSession.user.id);
+        }
+      })
+      .catch((error) => {
+        console.error('Error getting auth session:', error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
 
     // Listen for auth changes
     const { data: authListener } = authService.onAuthStateChange(
