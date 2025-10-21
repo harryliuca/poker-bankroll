@@ -11,15 +11,27 @@ if (!supabaseUrl || !supabaseAnonKey) {
 const webStorage =
   typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
     ? {
-        getItem: (key: string) =>
-          Promise.resolve(window.localStorage.getItem(key)),
-        setItem: (key: string, value: string) => {
-          window.localStorage.setItem(key, value);
-          return Promise.resolve();
+        getItem: async (key: string) => {
+          try {
+            return window.localStorage.getItem(key);
+          } catch (error) {
+            console.warn('Supabase storage getItem failed', error);
+            return null;
+          }
         },
-        removeItem: (key: string) => {
-          window.localStorage.removeItem(key);
-          return Promise.resolve();
+        setItem: async (key: string, value: string) => {
+          try {
+            window.localStorage.setItem(key, value);
+          } catch (error) {
+            console.warn('Supabase storage setItem failed', error);
+          }
+        },
+        removeItem: async (key: string) => {
+          try {
+            window.localStorage.removeItem(key);
+          } catch (error) {
+            console.warn('Supabase storage removeItem failed', error);
+          }
         },
       }
     : null;
