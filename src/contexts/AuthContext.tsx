@@ -42,6 +42,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     let isMounted = true;
+    const timeoutId = setTimeout(() => {
+      if (isMounted) {
+        console.warn('AuthContext: session lookup timed out');
+        setLoading(false);
+      }
+    }, 5000);
 
     const invalidateUserData = () => {
       queryClient.invalidateQueries({
@@ -73,6 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (isMounted) {
           setLoading(false);
         }
+        clearTimeout(timeoutId);
       }
     };
 
@@ -98,6 +105,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => {
       isMounted = false;
+      clearTimeout(timeoutId);
       authListener?.subscription?.unsubscribe();
     };
   }, [queryClient]);
