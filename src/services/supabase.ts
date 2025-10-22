@@ -56,17 +56,32 @@ export async function executeSupabaseQuery<T>(
     }
 
     lastError = result.error;
+    console.warn('[Supabase] query failed', {
+      attempt,
+      status: result.error.status ?? result.error.code,
+      message: result.error.message,
+    });
 
     if (shouldRetryAuth(result.error)) {
       attempt += 1;
       // Ensure session is initialized/refreshed before retrying
-      await supabase.auth.getSession();
+      const { data: current } = await supabase.auth.getSession();
+      if (!current?.session) {
+        const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError) {
+          console.error('[Supabase] refresh failed', refreshError);
+        } else {
+          console.info('[Supabase] session refreshed', Boolean(refreshed.session));
+        }
+      }
       await wait(150 * attempt);
       continue;
     }
 
+    console.error('[Supabase] giving up on query', result.error);
     throw result.error;
   }
 
+  console.error('[Supabase] retries exhausted', lastError);
   throw lastError;
 }
