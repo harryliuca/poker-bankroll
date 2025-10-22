@@ -1,6 +1,6 @@
 {
   "name": "Poker Bankroll",
-  "short_name": "Bankroll",
+  "short_name": "Poker Bankroll",
   "description": "Track your poker bankroll and session performance",
   "start_url": "/",
   "scope": "/",

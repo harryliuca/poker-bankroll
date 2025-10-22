@@ -29,7 +29,7 @@
       "bundler": "metro",
       "favicon": "./assets/favicon.png",
       "name": "Poker Bankroll",
-      "shortName": "Bankroll",
+      "shortName": "Poker Bankroll",
       "themeColor": "#2e7d32",
       "backgroundColor": "#ffffff",
       "display": "standalone",
