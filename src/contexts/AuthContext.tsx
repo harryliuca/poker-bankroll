@@ -59,29 +59,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }, 5000);
 
-    authService
-      .getSession()
-      .then((currentSession) => {
-        if (cancelled) return;
-        console.log('AuthContext: initial session', currentSession?.user?.id ?? null);
-        setSession(currentSession);
-        if (currentSession?.user) {
-          setUser(currentSession.user);
-          loadProfile(currentSession.user.id);
+    const loadInitialSession = async () => {
+      try {
+        const { session: initialSession } = await authService.getSession();
+        console.log('AuthContext: initial session', initialSession?.user?.id ?? null);
+        setSession(initialSession ?? null);
+        if (initialSession?.user) {
+          setUser(initialSession.user);
+          await loadProfile(initialSession.user.id);
+          invalidateUserData();
+          return;
+        }
+
+        // Attempt refresh if no session found
+        const { session: refreshedSession } = await authService.refreshSession();
+        console.log('AuthContext: refreshed session', refreshedSession?.user?.id ?? null);
+        setSession(refreshedSession ?? null);
+        if (refreshedSession?.user) {
+          setUser(refreshedSession.user);
+          await loadProfile(refreshedSession.user.id);
           invalidateUserData();
         }
-      })
-      .catch((error) => {
+      } catch (error) {
         if (!cancelled) {
           console.error('Error getting auth session:', error);
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) {
           clearTimeout(failSafeTimeout);
           setLoading(false);
         }
-      });
+      }
+    };
+
+    loadInitialSession();
 
     // Listen for auth changes
     const { data: authListener } = authService.onAuthStateChange(

@@ -29,11 +29,18 @@ export const authService = {
     if (error) throw error;
   },
 
-  // Get current session
+  // Get current session (returns both data + error for refresh logic)
   getSession: async () => {
     const { data, error } = await supabase.auth.getSession();
     if (error) throw error;
-    return data.session;
+    return data;
+  },
+
+  // Refresh session explicitly (used on web PWA when launching cold)
+  refreshSession: async () => {
+    const { data, error } = await supabase.auth.refreshSession();
+    if (error) throw error;
+    return data;
   },
 
   // Get current user
