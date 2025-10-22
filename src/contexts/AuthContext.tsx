@@ -50,18 +50,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     };
 
+    const withTimeout = async <T,>(
+      promise: Promise<T>,
+      label: string,
+      ms: number
+    ): Promise<T> => {
+      let timeoutId: ReturnType<typeof setTimeout>;
+      return Promise.race([
+        promise.finally(() => clearTimeout(timeoutId)),
+        new Promise<T>((_, reject) => {
+          timeoutId = setTimeout(() => reject(new Error(`${label} timeout after ${ms}ms`)), ms);
+        }),
+      ]);
+    };
+
     // Check for existing session
     let cancelled = false;
-    const failSafeTimeout = setTimeout(() => {
-      if (!cancelled) {
-        console.warn('Auth session request timed out, showing login screen');
-        setLoading(false);
-      }
-    }, 5000);
-
     const loadInitialSession = async () => {
       try {
-        const { session: initialSession } = await authService.getSession();
+        const { session: initialSession } = await withTimeout(
+          authService.getSession(),
+          'getSession',
+          4000
+        );
         console.log('AuthContext: initial session', initialSession?.user?.id ?? null);
         setSession(initialSession ?? null);
         if (initialSession?.user) {
@@ -72,7 +83,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         // Attempt refresh if no session found
-        const { session: refreshedSession } = await authService.refreshSession();
+        const { session: refreshedSession } = await withTimeout(
+          authService.refreshSession(),
+          'refreshSession',
+          6000
+        );
         console.log('AuthContext: refreshed session', refreshedSession?.user?.id ?? null);
         setSession(refreshedSession ?? null);
         if (refreshedSession?.user) {
@@ -86,7 +101,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } finally {
         if (!cancelled) {
-          clearTimeout(failSafeTimeout);
           setLoading(false);
         }
       }
@@ -114,7 +128,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => {
       cancelled = true;
-      clearTimeout(failSafeTimeout);
       authListener.subscription.unsubscribe();
     };
   }, []);

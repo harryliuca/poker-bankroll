@@ -10,9 +10,51 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
+const memoryStorage: Record<string, string> = {};
+
+const webStorage = {
+  getItem: async (key: string) => {
+    if (typeof window === 'undefined') {
+      return memoryStorage[key] ?? null;
+    }
+
+    try {
+      const value = window.localStorage?.getItem(key);
+      if (value !== null && value !== undefined) {
+        memoryStorage[key] = value;
+        return value;
+      }
+      return memoryStorage[key] ?? null;
+    } catch (error) {
+      console.warn('[Supabase] localStorage getItem failed', error);
+      return memoryStorage[key] ?? null;
+    }
+  },
+  setItem: async (key: string, value: string) => {
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage?.setItem(key, value);
+      } catch (error) {
+        console.warn('[Supabase] localStorage setItem failed', error);
+      }
+    }
+    memoryStorage[key] = value;
+  },
+  removeItem: async (key: string) => {
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage?.removeItem(key);
+      } catch (error) {
+        console.warn('[Supabase] localStorage removeItem failed', error);
+      }
+    }
+    delete memoryStorage[key];
+  },
+};
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    ...(Platform.OS === 'web' ? {} : { storage: AsyncStorage }),
+    storage: Platform.OS === 'web' ? webStorage : AsyncStorage,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: Platform.OS === 'web',
