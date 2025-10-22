@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { sessionService } from '@/services/sessions';
 
 export default function HistoryScreen() {
-  const { user, profile } = useAuth();
+  const { user, profile, session } = useAuth();
   const { navigateTo } = useNavigation();
 
   const { data: sessions = [], isLoading } = useQuery({
@@ -17,7 +17,7 @@ export default function HistoryScreen() {
       console.log('Sessions loaded:', data.length, data);
       return data;
     },
-    enabled: !!user,
+    enabled: !!user && !!session,
   });
 
   const formatCurrency = (amount: number) => {
