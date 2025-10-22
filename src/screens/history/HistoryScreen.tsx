@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet, ScrollView, FlatList } from 'react-native';
 import { Appbar, Card, Text, Chip, FAB } from 'react-native-paper';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,7 +10,11 @@ export default function HistoryScreen() {
   const { user, profile, session } = useAuth();
   const { navigateTo } = useNavigation();
 
-  const { data: sessions = [], isLoading } = useQuery({
+  const {
+    data: sessions = [],
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['sessions', user?.id],
     queryFn: async () => {
       const data = await sessionService.getSessions(user!.id);
@@ -19,6 +23,12 @@ export default function HistoryScreen() {
     },
     enabled: !!user && !!session,
   });
+
+  useEffect(() => {
+    if (error) {
+      console.error('History: failed to load sessions', error);
+    }
+  }, [error]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -134,6 +144,15 @@ export default function HistoryScreen() {
         <View style={styles.centerContent}>
           <Text>Loading...</Text>
         </View>
+      ) : error ? (
+        <View style={styles.centerContent}>
+          <Text variant="bodyLarge" style={styles.emptyText}>
+            Unable to load history
+          </Text>
+          <Text variant="bodyMedium" style={styles.emptySubtext}>
+            Please try refreshing from the dashboard.
+          </Text>
+        </View>
       ) : sessions.length === 0 ? (
         <View style={styles.centerContent}>
           <Text variant="bodyLarge" style={styles.emptyText}>
@@ -152,11 +171,7 @@ export default function HistoryScreen() {
         />
       )}
 
-      <FAB
-        icon="plus"
-        style={styles.fab}
-        onPress={() => navigateTo('new-session')}
-      />
+      <FAB icon="plus" style={styles.fab} onPress={() => navigateTo('start-session')} />
     </View>
   );
 }

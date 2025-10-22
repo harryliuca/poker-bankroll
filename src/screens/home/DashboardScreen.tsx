@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, Card, Button, Appbar, FAB } from 'react-native-paper';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,7 +13,10 @@ export default function DashboardScreen() {
   const queryClient = useQueryClient();
 
   // Fetch active session
-  const { data: activeSessions = [] } = useQuery({
+  const {
+    data: activeSessions = [],
+    error: activeSessionsError,
+  } = useQuery({
     queryKey: ['sessions', 'active', user?.id],
     queryFn: async () => {
       const sessions = await sessionService.getSessions(user!.id);
@@ -26,14 +29,20 @@ export default function DashboardScreen() {
   const activeSession = activeSessions[0];
 
   // Fetch recent sessions
-  const { data: recentSessions = [] } = useQuery({
+  const {
+    data: recentSessions = [],
+    error: recentSessionsError,
+  } = useQuery({
     queryKey: ['sessions', 'recent', user?.id],
     queryFn: () => sessionService.getRecentSessions(user!.id, 5),
     enabled: !!user && !!session,
   });
 
   // Fetch overall stats
-  const { data: overallStats } = useQuery({
+  const {
+    data: overallStats,
+    error: overallStatsError,
+  } = useQuery({
     queryKey: ['stats', 'overall', user?.id],
     queryFn: () => statsService.getOverallStats(user!.id),
     enabled: !!user && !!session,
@@ -48,20 +57,47 @@ export default function DashboardScreen() {
     }).format(amount);
   };
 
+  useEffect(() => {
+    if (activeSessionsError) {
+      console.error('Dashboard: failed to load active sessions', activeSessionsError);
+    }
+  }, [activeSessionsError]);
+
+  useEffect(() => {
+    if (recentSessionsError) {
+      console.error('Dashboard: failed to load recent sessions', recentSessionsError);
+    }
+  }, [recentSessionsError]);
+
+  useEffect(() => {
+    if (overallStatsError) {
+      console.error('Dashboard: failed to load overall stats', overallStatsError);
+    }
+  }, [overallStatsError]);
+
+  const handleRefresh = useCallback(() => {
+    console.log('Dashboard: manual refresh triggered');
+    queryClient.invalidateQueries({ queryKey: ['sessions'] });
+    queryClient.invalidateQueries({ queryKey: ['stats'] });
+    queryClient.invalidateQueries({ queryKey: ['profile'] });
+  }, [queryClient]);
+
+  const handleSignOut = useCallback(async () => {
+    console.log('Dashboard: sign out pressed');
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Dashboard: sign out failed', error);
+    }
+  }, [signOut]);
+
   return (
     <View style={styles.container}>
       <Appbar.Header>
         <Appbar.Content title="Poker Bankroll" />
-        <Appbar.Action
-          icon="refresh"
-          onPress={() => {
-            queryClient.invalidateQueries({ queryKey: ['sessions'] });
-            queryClient.invalidateQueries({ queryKey: ['stats'] });
-            queryClient.invalidateQueries({ queryKey: ['profile'] });
-          }}
-        />
+        <Appbar.Action icon="refresh" onPress={handleRefresh} />
         <Appbar.Action icon="cog" onPress={() => navigateTo('settings')} />
-        <Appbar.Action icon="logout" onPress={signOut} />
+        <Appbar.Action icon="logout" onPress={handleSignOut} />
       </Appbar.Header>
 
       <ScrollView style={styles.content}>
