@@ -42,12 +42,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     let isMounted = true;
-    const timeoutId = setTimeout(() => {
-      if (isMounted) {
-        console.warn('AuthContext: session lookup timed out');
-        setLoading(false);
-      }
-    }, 5000);
 
     const invalidateUserData = () => {
       queryClient.invalidateQueries({
@@ -71,6 +65,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           await loadProfile(currentSession.user.id);
           invalidateUserData();
         }
+        if (!currentSession?.user) {
+          console.warn('AuthContext: no session returned on load');
+        }
       } catch (error) {
         if (isMounted) {
           console.error('Error getting auth session:', error);
@@ -79,7 +76,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (isMounted) {
           setLoading(false);
         }
-        clearTimeout(timeoutId);
       }
     };
 
@@ -105,7 +101,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => {
       isMounted = false;
-      clearTimeout(timeoutId);
       authListener?.subscription?.unsubscribe();
     };
   }, [queryClient]);

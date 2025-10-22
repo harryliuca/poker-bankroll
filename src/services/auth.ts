@@ -32,6 +32,11 @@ export const authService = {
   // Get current session
   getSession: async () => {
     const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      console.error('[Supabase] getSession error', error);
+    } else {
+      console.log('[Supabase] getSession user', data.session?.user?.id ?? null);
+    }
     if (error) throw error;
     return data.session;
   },
