@@ -9,25 +9,25 @@ import { sessionService } from '@/services/sessions';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 export default function StatsScreen() {
-  const { user, profile, session } = useAuth();
+  const { user, profile } = useAuth();
   const { navigateTo } = useNavigation();
 
   const { data: overallStats } = useQuery({
     queryKey: ['stats', 'overall', user?.id],
     queryFn: () => statsService.getOverallStats(user!.id),
-    enabled: !!user && !!session,
+    enabled: !!user,
   });
 
   const { data: userStats = [] } = useQuery({
     queryKey: ['stats', 'detailed', user?.id],
     queryFn: () => statsService.getUserStats(user!.id),
-    enabled: !!user && !!session,
+    enabled: !!user,
   });
 
   const { data: sessions = [] } = useQuery({
     queryKey: ['sessions', user?.id],
     queryFn: () => sessionService.getSessions(user!.id),
-    enabled: !!user && !!session,
+    enabled: !!user,
   });
 
   // Prepare chart data: cumulative profit over time

@@ -22,7 +22,7 @@ interface Props {
 }
 
 export default function StartSessionScreen({ onSessionStarted }: Props) {
-  const { user, profile, session } = useAuth();
+  const { user, profile } = useAuth();
   const { navigateTo } = useNavigation();
   const queryClient = useQueryClient();
 
@@ -47,7 +47,7 @@ export default function StartSessionScreen({ onSessionStarted }: Props) {
       const sessions = await sessionService.getSessions(user!.id);
       return sessions.length > 0 ? sessions[0] : null; // First one is most recent
     },
-    enabled: !!user && !!session,
+    enabled: !!user,
   });
 
   // Auto-fill from last session when it loads

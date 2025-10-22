@@ -41,6 +41,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    let isMounted = true;
+
     const invalidateUserData = () => {
       queryClient.invalidateQueries({
         predicate: (query) => {
@@ -50,57 +52,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     };
 
-    const withTimeout = async <T,>(
-      promise: Promise<T>,
-      label: string,
-      ms: number
-    ): Promise<T> => {
-      let timeoutId: ReturnType<typeof setTimeout>;
-      return Promise.race([
-        promise.finally(() => clearTimeout(timeoutId)),
-        new Promise<T>((_, reject) => {
-          timeoutId = setTimeout(() => reject(new Error(`${label} timeout after ${ms}ms`)), ms);
-        }),
-      ]);
-    };
-
-    // Check for existing session
-    let cancelled = false;
     const loadInitialSession = async () => {
       try {
-        const { session: initialSession } = await withTimeout(
-          authService.getSession(),
-          'getSession',
-          4000
-        );
-        console.log('AuthContext: initial session', initialSession?.user?.id ?? null);
-        setSession(initialSession ?? null);
-        if (initialSession?.user) {
-          setUser(initialSession.user);
-          await loadProfile(initialSession.user.id);
-          invalidateUserData();
-          return;
-        }
+        const currentSession = await authService.getSession();
+        console.log('AuthContext: initial session', currentSession?.user?.id ?? null);
+        if (!isMounted) return;
 
-        // Attempt refresh if no session found
-        const { session: refreshedSession } = await withTimeout(
-          authService.refreshSession(),
-          'refreshSession',
-          6000
-        );
-        console.log('AuthContext: refreshed session', refreshedSession?.user?.id ?? null);
-        setSession(refreshedSession ?? null);
-        if (refreshedSession?.user) {
-          setUser(refreshedSession.user);
-          await loadProfile(refreshedSession.user.id);
+        setSession(currentSession ?? null);
+        setUser(currentSession?.user ?? null);
+
+        if (currentSession?.user) {
+          await loadProfile(currentSession.user.id);
           invalidateUserData();
         }
       } catch (error) {
-        if (!cancelled) {
+        if (isMounted) {
           console.error('Error getting auth session:', error);
         }
       } finally {
-        if (!cancelled) {
+        if (isMounted) {
           setLoading(false);
         }
       }
@@ -108,9 +78,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     loadInitialSession();
 
-    // Listen for auth changes
     const { data: authListener } = authService.onAuthStateChange(
       async (event, currentSession) => {
+        if (!isMounted) return;
         console.log('AuthContext: auth state change', event, currentSession?.user?.id ?? null);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
@@ -127,10 +97,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     return () => {
-      cancelled = true;
-      authListener.subscription.unsubscribe();
+      isMounted = false;
+      authListener?.subscription?.unsubscribe();
     };
-  }, []);
+  }, [queryClient]);
 
   const signIn = async (email: string, password: string) => {
     const { session: newSession, user: newUser } = await authService.signIn(email, password);

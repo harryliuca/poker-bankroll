@@ -8,7 +8,7 @@ import { sessionService } from '@/services/sessions';
 import { statsService } from '@/services/stats';
 
 export default function DashboardScreen() {
-  const { user, profile, session, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const { navigateTo } = useNavigation();
   const queryClient = useQueryClient();
 
@@ -22,7 +22,7 @@ export default function DashboardScreen() {
       const sessions = await sessionService.getSessions(user!.id);
       return sessions.filter(s => s.is_ongoing);
     },
-    enabled: !!user && !!session,
+    enabled: !!user,
     refetchInterval: 5000, // Refresh every 5 seconds for live tracking
   });
 
@@ -35,7 +35,7 @@ export default function DashboardScreen() {
   } = useQuery({
     queryKey: ['sessions', 'recent', user?.id],
     queryFn: () => sessionService.getRecentSessions(user!.id, 5),
-    enabled: !!user && !!session,
+    enabled: !!user,
   });
 
   // Fetch overall stats
@@ -45,7 +45,7 @@ export default function DashboardScreen() {
   } = useQuery({
     queryKey: ['stats', 'overall', user?.id],
     queryFn: () => statsService.getOverallStats(user!.id),
-    enabled: !!user && !!session,
+    enabled: !!user,
   });
 
   const formatCurrency = (amount: number) => {

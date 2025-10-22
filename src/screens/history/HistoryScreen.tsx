@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { sessionService } from '@/services/sessions';
 
 export default function HistoryScreen() {
-  const { user, profile, session } = useAuth();
+  const { user, profile } = useAuth();
   const { navigateTo } = useNavigation();
 
   const {
@@ -21,7 +21,7 @@ export default function HistoryScreen() {
       console.log('Sessions loaded:', data.length, data);
       return data;
     },
-    enabled: !!user && !!session,
+    enabled: !!user,
   });
 
   useEffect(() => {
